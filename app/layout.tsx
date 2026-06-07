@@ -7,6 +7,7 @@ const description =
   "見開きPDFをブラウザ内で左右または上下に分割する無料Webアプリ。PDFはサーバーに送信されず、分割位置と出力順を指定できます。";
 const siteUrl = "https://pdfsplit.shotaste.com";
 const googleAnalyticsId = process.env.NEXT_PUBLIC_GA_ID;
+const googleAdsenseClientId = "ca-pub-5169510031090776";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -79,6 +80,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${googleAdsenseClientId}`}
+          crossOrigin="anonymous"
+        />
+      </head>
       <body>
         {googleAnalyticsId ? (
           <>
