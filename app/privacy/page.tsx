@@ -2,9 +2,33 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteFrame from "../site-frame";
 
+const title = "プライバシーポリシー｜PDF見開き分割くん";
+const description =
+  "PDF見開き分割くんのプライバシーポリシー。PDF処理はブラウザ内で完結し、アップロードしたPDFはサーバーには送信されません。";
+
 export const metadata: Metadata = {
-  title: "プライバシーポリシー｜PDF見開き分割くん",
-  description: "PDF見開き分割くんのプライバシーポリシー。PDF処理はブラウザ内で完結し、アップロードしたPDFはサーバーには送信されません。"
+  title,
+  description,
+  alternates: {
+    canonical: "/privacy"
+  },
+  robots: {
+    index: true,
+    follow: true
+  },
+  openGraph: {
+    title,
+    description,
+    url: "/privacy",
+    siteName: "PDF見開き分割くん",
+    type: "article",
+    locale: "ja_JP"
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description
+  }
 };
 
 export default function PrivacyPage() {
