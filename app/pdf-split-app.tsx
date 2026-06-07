@@ -341,7 +341,7 @@ export default function PdfSplitApp() {
       }
 
       const outputBytes = await outputPdf.save();
-      const blob = new Blob([outputBytes], { type: "application/pdf" });
+      const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: "application/pdf" });
       const nextUrl = URL.createObjectURL(blob);
 
       setDownloadUrl((currentUrl) => {
@@ -425,6 +425,24 @@ export default function PdfSplitApp() {
           </div>
 
           <div className="field-group">
+            <span className="field-label">出力順</span>
+            <div className="segmented-control" role="radiogroup" aria-label="出力順">
+              {(["natural", "reverse"] as const).map((value) => (
+                <label key={value}>
+                  <input
+                    type="radio"
+                    name="outputOrder"
+                    value={value}
+                    checked={outputOrder === value}
+                    onChange={() => setOutputOrder(value)}
+                  />
+                  <span>{outputOrderLabels[direction][value]}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="field-group">
             <div className="split-label-row">
               <label className="field-label" htmlFor="split-ratio">
                 分割位置
@@ -443,24 +461,6 @@ export default function PdfSplitApp() {
                 onChange={handleSplitRatioChange}
               />
               <span className="range-center-mark" aria-hidden="true" />
-            </div>
-          </div>
-
-          <div className="field-group">
-            <span className="field-label">出力順</span>
-            <div className="segmented-control" role="radiogroup" aria-label="出力順">
-              {(["natural", "reverse"] as const).map((value) => (
-                <label key={value}>
-                  <input
-                    type="radio"
-                    name="outputOrder"
-                    value={value}
-                    checked={outputOrder === value}
-                    onChange={() => setOutputOrder(value)}
-                  />
-                  <span>{outputOrderLabels[direction][value]}</span>
-                </label>
-              ))}
             </div>
           </div>
 

@@ -444,7 +444,7 @@ a {
 }
 
 .download-link {
-  margin: 0 24px;
+  margin: 0 24px 24px;
   border: 1px solid var(--line-strong);
   background: #ffffff;
   color: #3f6c7e;
@@ -456,7 +456,7 @@ a {
 }
 
 .error-message {
-  margin: 0;
+  margin: 0 24px 24px;
   padding: 12px 14px;
   border: 1px solid #f3b7b0;
   border-radius: var(--radius);
