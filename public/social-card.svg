@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">PDF見開き分割くん</title>
+  <desc id="desc">Social card for PDF見開き分割くん.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fcfdff" />
+      <stop offset="1" stop-color="#eef6fa" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#17324d" flood-opacity="0.10" />
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect x="56" y="52" width="1088" height="526" rx="34" fill="rgba(255,255,255,0.52)" stroke="#dbe8ed" />
+
+  <g filter="url(#shadow)">
+    <image href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiByb2xlPSJpbWciIGFyaWEtbGFiZWxsZWRieT0idGl0bGUgZGVzYyI+CiAgPHRpdGxlIGlkPSJ0aXRsZSI+UERG6KaL6ZaL44GN5YiG5Ymy44GP44KTIHNsZWVweSB0cmFuc3BhcmVudCBjaGFyYWN0ZXI8L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5BIHRyYW5zcGFyZW50IGJhY2tncm91bmQgY3V0ZSBvcGVuIGJvb2sgbWFzY290IHdpdGggc2xlZXB5IGV5ZXMgYW5kIGEgcmVkIGNlbnRlciBzcGxpdCBsaW5lLjwvZGVzYz4KCiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAtOCkiPgogICAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTczMjRkIiBzdHJva2Utd2lkdGg9IjE4IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgICA8cGF0aCBkPSJNMTAyIDI3MGMtMzggNi01OCAyOC02OCA2NiIvPgogICAgICA8cGF0aCBkPSJNNDEwIDI3MGMzOCA2IDU4IDI4IDY4IDY2Ii8+CiAgICAgIDxwYXRoIGQ9Ik0xOTAgMzg4Yy0yNSAyNi0zMSA1My0xOCA3OSIvPgogICAgICA8cGF0aCBkPSJNMzIyIDM4OGMyNSAyNiAzMSA1MyAxOCA3OSIvPgogICAgPC9nPgoKICAgIDxnIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzE3MzI0ZCIgc3Ryb2tlLXdpZHRoPSIxMiI+CiAgICAgIDxjaXJjbGUgY3g9IjMxIiBjeT0iMzQ1IiByPSIyNSIvPgogICAgICA8Y2lyY2xlIGN4PSI0ODEiIGN5PSIzNDUiIHI9IjI1Ii8+CiAgICAgIDxjaXJjbGUgY3g9IjE2OCIgY3k9IjQ3NCIgcj0iMjQiLz4KICAgICAgPGNpcmNsZSBjeD0iMzQ0IiBjeT0iNDc0IiByPSIyNCIvPgogICAgPC9nPgoKICAgIDxwYXRoIGQ9Ik04MiAxMjRjMC0xNiAxNC0yOCAzMC0yNSA1MiA5IDEwMCAyNiAxNDQgNTN2MjYwYy00NC0yNy05Mi00NC0xNDQtNTMtMTYtMy0zMCA5LTMwIDI1VjEyNFoiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzE3MzI0ZCIgc3Ryb2tlLXdpZHRoPSIxNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTQzMCAxMjRjMC0xNi0xNC0yOC0zMC0yNS01MiA5LTEwMCAyNi0xNDQgNTN2MjYwYzQ0LTI3IDkyLTQ0IDE0NC01MyAxNi0zIDMwIDkgMzAgMjVWMTI0WiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMTczMjRkIiBzdHJva2Utd2lkdGg9IjE0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CgogICAgPHBhdGggZD0iTTE4NiAxNzRjMTQgOCAyOCA4IDQyIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzE3MzI0ZCIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNMjg0IDE3NGMxNCA4IDI4IDggNDIgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTczMjRkIiBzdHJva2Utd2lkdGg9IjEyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxjaXJjbGUgY3g9IjE2NiIgY3k9IjIyNCIgcj0iMTIiIGZpbGw9IiNmZmQxZGMiLz4KICAgIDxjaXJjbGUgY3g9IjM0NiIgY3k9IjIyNCIgcj0iMTIiIGZpbGw9IiNmZmQxZGMiLz4KCiAgICA8cGF0aCBkPSJNMTMyIDI4MmMzMyA1IDY1IDE2IDk2IDMyTTEzMiAzMzRjMzMgNSA2NSAxNiA5NiAzMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOWZiMmM1IiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik0zODAgMjgyYy0zMyA1LTY1IDE2LTk2IDMyTTM4MCAzMzRjLTMzIDUtNjUgMTYtOTYgMzIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlmYjJjNSIgc3Ryb2tlLXdpZHRoPSIxMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CgogICAgPHBhdGggZD0iTTI1NiAxMjJ2MjkwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTI1NiAxMjJ2MjkwIiBmaWxsPSJub25lIiBzdHJva2U9IiNlZjQ0NDQiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWRhc2hhcnJheT0iMjIgMTgiLz4KICA8L2c+Cjwvc3ZnPgo=" x="110" y="175" width="250" height="250" preserveAspectRatio="xMidYMid meet" />
+  </g>
+
+  <g>
+    <text x="430" y="286" fill="#12212b" font-family="Noto Sans CJK JP, Noto Sans CJK, Yu Gothic, Meiryo, sans-serif" font-size="72" font-weight="900" letter-spacing="0.01em">PDF見開き分割くん</text>
+    <text x="430" y="352" fill="#5a6c74" font-family="Noto Sans CJK JP, Noto Sans CJK, Yu Gothic, Meiryo, sans-serif" font-size="32" font-weight="900">
+      <tspan x="430" dy="0">A3・B4などのPDFを、</tspan>
+      <tspan x="600" dy="52">まんなかで2ページに</tspan>
+    </text>
+  </g>
+</svg>
