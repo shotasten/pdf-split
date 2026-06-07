@@ -33,7 +33,7 @@ NEXT_PUBLIC_GA_ID=G-710YVMZ9Q1
 
 ローカル開発で計測したくない場合は、この環境変数を設定しないでください。
 
-Google AdSense の自動広告タグは `app/layout.tsx` で全ページの `<head>` に出力します。広告配信では Cookie などが利用される場合がありますが、選択したPDFファイルの内容を送信する処理はありません。
+Google AdSense の自動広告タグは `APP_ENV=prd` のときのみ `app/layout.tsx` で全ページの `<head>` に出力します。Cloudflare Pages の Production 環境に `APP_ENV=prd` を設定し、Preview やローカルでは未設定のままにします。広告配信では Cookie などが利用される場合がありますが、選択したPDFファイルの内容を送信する処理はありません。
 
 ## よく使うコマンド
 

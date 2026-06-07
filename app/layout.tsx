@@ -8,6 +8,7 @@ const description =
 const siteUrl = "https://pdfsplit.shotaste.com";
 const googleAnalyticsId = process.env.NEXT_PUBLIC_GA_ID;
 const googleAdsenseClientId = "ca-pub-5169510031090776";
+const shouldLoadAdsense = process.env.APP_ENV === "prd";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -81,11 +82,13 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
-        <script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${googleAdsenseClientId}`}
-          crossOrigin="anonymous"
-        />
+        {shouldLoadAdsense ? (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${googleAdsenseClientId}`}
+            crossOrigin="anonymous"
+          />
+        ) : null}
       </head>
       <body>
         {googleAnalyticsId ? (

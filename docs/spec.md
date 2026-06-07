@@ -97,7 +97,7 @@ PDFの読み込み、プレビュー、分割PDFの作成はブラウザ内で�
 
 `NEXT_PUBLIC_GA_ID` が設定されている環境では、サービス改善のために Google Analytics を読み込み、ページビューなどのアクセス状況を計測します。PDFファイルの内容を Google Analytics へ送信する処理はありません。未設定の場合、Google Analytics のタグは出力されません。
 
-Google AdSense の自動広告タグは全ページの `<head>` に出力します。広告配信では Cookie などが利用される場合がありますが、PDFファイルの内容を Google AdSense へ送信する処理はありません。
+Google AdSense の自動広告タグは `APP_ENV=prd` のときのみ全ページの `<head>` に出力します。Cloudflare Pages の Production 環境に `APP_ENV=prd` を設定し、Preview やローカルでは未設定のままにします。広告配信では Cookie などが利用される場合がありますが、PDFファイルの内容を Google AdSense へ送信する処理はありません。
 
 プライバシーポリシーは [app/privacy/page.tsx](../app/privacy/page.tsx) にあります。
 
@@ -114,7 +114,7 @@ Google AdSense の自動広告タグは全ページの `<head>` に出力しま�
 
 Google Analytics は `app/layout.tsx` で `next/script` を使って読み込みます。トラッキングIDは `NEXT_PUBLIC_GA_ID` から参照します。
 
-Google AdSense は `app/layout.tsx` で自動広告タグを読み込みます。クライアントIDは `ca-pub-5169510031090776` です。
+Google AdSense は `app/layout.tsx` で自動広告タグを読み込みます。クライアントIDは `ca-pub-5169510031090776` です。読み込み条件は `APP_ENV=prd` です。
 
 ## 実装上の注意
 
