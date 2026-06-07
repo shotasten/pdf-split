@@ -57,6 +57,10 @@ export default function PrivacyPage() {
             本サービスでは、サービス改善のために Google Analytics を利用する場合があります。
             Google Analytics はCookieなどを利用してアクセス状況を計測しますが、利用者が選択したPDFファイルの内容を取得することはありません。
           </p>
+          <p>
+            また、本サービスでは Google AdSense による広告配信を行う場合があります。
+            Google AdSense はCookieなどを利用して広告を配信する場合がありますが、利用者が選択したPDFファイルの内容を取得することはありません。
+          </p>
           </section>
 
           <section>
