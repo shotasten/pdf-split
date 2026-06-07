@@ -34,19 +34,10 @@ npm run lint
 ## ディレクトリ
 
 ```text
-app/
-  layout.tsx          サイト全体のメタデータ
-  page.tsx            トップページ
-  pdf-split-app.tsx   PDF分割ツール本体
-  privacy/page.tsx    プライバシーポリシー
-public/
-  assets/             ロゴ、キャラクター画像
-  icons/              favicon、PWA用アイコン
-scripts/
-  generate-icons.mjs
-  generate-social-card.mjs
-docs/
-  spec.md             仕様メモ
+app/      アプリ本体、画面、メタデータ、プライバシーポリシー
+public/   画像、アイコン、manifest、robots.txt などの静的ファイル
+scripts/  アイコンやソーシャルカードを生成する補助スクリプト
+docs/     仕様や設計メモなどのドキュメント
 ```
 
 ## 仕様
