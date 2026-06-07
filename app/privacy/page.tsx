@@ -1,0 +1,48 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import SiteFrame from "../site-frame";
+
+export const metadata: Metadata = {
+  title: "プライバシーポリシー｜PDF見開き分割くん",
+  description: "PDF見開き分割くんのプライバシーポリシー。PDF処理はブラウザ内で完結し、アップロードしたPDFはサーバーには送信されません。"
+};
+
+export default function PrivacyPage() {
+  return (
+    <SiteFrame>
+      <section className="privacy-shell">
+        <article className="privacy-card">
+          <Link className="privacy-back" href="/">← PDF見開き分割くんへ戻る</Link>
+          <h1>プライバシーポリシー</h1>
+          <p className="privacy-lead">
+          PDF見開き分割くんは、PDFのプレビューと分割処理をブラウザ内で行います。
+          選択したPDFファイルはサーバーには送信されません。
+          </p>
+
+          <section>
+          <h2>PDFファイルの取り扱い</h2>
+          <p>
+            本サービスでは、PDFの読み込み、プレビュー、分割PDFの作成を利用者のブラウザ内で実行します。
+            PDFファイルの内容を当サイトのサーバーへアップロード、保存、解析することはありません。
+          </p>
+          </section>
+
+          <section>
+          <h2>アクセス解析・広告について</h2>
+          <p>
+            今後、サービス改善や広告配信のためにアクセス解析ツールや広告配信サービスを利用する場合があります。
+            その場合でも、利用者が選択したPDFファイルの内容を取得することはありません。
+          </p>
+          </section>
+
+          <section>
+          <h2>お知らせ</h2>
+          <p>
+            本ポリシーの内容は、必要に応じて変更する場合があります。変更後の内容は本ページに掲載します。
+          </p>
+          </section>
+        </article>
+      </section>
+    </SiteFrame>
+  );
+}

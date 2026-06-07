@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">PDF見開き分割くん sleepy transparent character</title>
+  <desc id="desc">A transparent background cute open book mascot with sleepy eyes and a red center split line.</desc>
+
+  <g transform="translate(0 -8)">
+    <g fill="none" stroke="#17324d" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M102 270c-38 6-58 28-68 66"/>
+      <path d="M410 270c38 6 58 28 68 66"/>
+      <path d="M190 388c-25 26-31 53-18 79"/>
+      <path d="M322 388c25 26 31 53 18 79"/>
+    </g>
+
+    <g fill="#ffffff" stroke="#17324d" stroke-width="12">
+      <circle cx="31" cy="345" r="25"/>
+      <circle cx="481" cy="345" r="25"/>
+      <circle cx="168" cy="474" r="24"/>
+      <circle cx="344" cy="474" r="24"/>
+    </g>
+
+    <path d="M82 124c0-16 14-28 30-25 52 9 100 26 144 53v260c-44-27-92-44-144-53-16-3-30 9-30 25V124Z" fill="#ffffff" stroke="#17324d" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M430 124c0-16-14-28-30-25-52 9-100 26-144 53v260c44-27 92-44 144-53 16-3 30 9 30 25V124Z" fill="#ffffff" stroke="#17324d" stroke-width="14" stroke-linejoin="round"/>
+
+    <path d="M186 174c14 8 28 8 42 0" fill="none" stroke="#17324d" stroke-width="12" stroke-linecap="round"/>
+    <path d="M284 174c14 8 28 8 42 0" fill="none" stroke="#17324d" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="166" cy="224" r="12" fill="#ffd1dc"/>
+    <circle cx="346" cy="224" r="12" fill="#ffd1dc"/>
+
+    <path d="M132 282c33 5 65 16 96 32M132 334c33 5 65 16 96 32" fill="none" stroke="#9fb2c5" stroke-width="10" stroke-linecap="round"/>
+    <path d="M380 282c-33 5-65 16-96 32M380 334c-33 5-65 16-96 32" fill="none" stroke="#9fb2c5" stroke-width="10" stroke-linecap="round"/>
+
+    <path d="M256 122v290" fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round"/>
+    <path d="M256 122v290" fill="none" stroke="#ef4444" stroke-width="13" stroke-linecap="round" stroke-dasharray="22 18"/>
+  </g>
+</svg>
