@@ -1,10 +1,18 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
 const root = process.cwd();
 const source = path.join(root, "public", "assets", "logo.svg");
 const outputDir = path.join(root, "public", "icons");
+const faviconSvgPath = path.join(outputDir, "favicon.svg");
+
+const sourceSvg = await readFile(source, "utf8");
+const transparentFaviconSvg = sourceSvg
+  .replace(/^\s*<rect width="512" height="512" rx="104" fill="url\(#bg\)"\/>\s*$/m, "");
+
+await mkdir(outputDir, { recursive: true });
+await writeFile(faviconSvgPath, `${transparentFaviconSvg}\n`);
 
 const icons = [
   { file: "favicon-16x16.png", size: 16 },
@@ -16,11 +24,10 @@ const icons = [
   { file: "maskable-icon-512x512.png", size: 512, padding: 44 }
 ];
 
-await mkdir(outputDir, { recursive: true });
 
 for (const icon of icons) {
   const innerSize = icon.padding ? icon.size - icon.padding * 2 : icon.size;
-  const image = sharp(source).resize(innerSize, innerSize, {
+  const image = sharp(Buffer.from(transparentFaviconSvg)).resize(innerSize, innerSize, {
     fit: "contain",
     background: { r: 0, g: 0, b: 0, alpha: 0 }
   });
@@ -72,4 +79,4 @@ await writeFile(
   `${JSON.stringify(manifest, null, 2)}\n`
 );
 
-console.log(`Generated ${icons.length} icons and site.webmanifest.`);
+console.log(`Generated ${icons.length} icons, favicon.svg and site.webmanifest.`);
