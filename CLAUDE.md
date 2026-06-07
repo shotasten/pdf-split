@@ -21,6 +21,7 @@ READMEで全体像をつかみ、細かい挙動は `docs/spec.md` を確認し�
 - `main` への直pushは禁止
 - 特別な指示がない限り、最新の `main` から作業ブランチを切って変更し、Pull Requestを作成する
 - GitHub上に残るコミットメッセージ、Pull Request、Issue、コメントは日本語で書く
+- 機能改修後は `npm run dev` で画面を確認し、ユーザーにも動作確認を促す
 
 ## 確認コマンド
 
@@ -29,4 +30,7 @@ READMEで全体像をつかみ、細かい挙動は `docs/spec.md` を確認し�
 ```bash
 npm run lint
 npm run build
+npm run dev
 ```
+
+`npm run dev` は、機能改修後の画面確認に使います。起動後は、変更した操作をユーザーにも確認してもらうよう案内してください。
