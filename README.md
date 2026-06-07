@@ -23,6 +23,16 @@
 npm install
 ```
 
+## 環境変数
+
+Google Analytics を有効にする場合は、ビルド環境に `NEXT_PUBLIC_GA_ID` を設定します。未設定の場合、Google Analytics のタグは出力されません。
+
+```bash
+NEXT_PUBLIC_GA_ID=G-710YVMZ9Q1
+```
+
+ローカル開発で計測したくない場合は、この環境変数を設定しないでください。
+
 ## よく使うコマンド
 
 ```bash

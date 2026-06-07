@@ -95,6 +95,8 @@ PDF生成には `pdf-lib` を使います。元PDFの各ページを2回ずつ�
 
 PDFの読み込み、プレビュー、分割PDFの作成はブラウザ内で行います。選択されたPDFをアプリケーション側のサーバーへ送る処理はありません。
 
+`NEXT_PUBLIC_GA_ID` が設定されている環境では、サービス改善のために Google Analytics を読み込み、ページビューなどのアクセス状況を計測します。PDFファイルの内容を Google Analytics へ送信する処理はありません。未設定の場合、Google Analytics のタグは出力されません。
+
 プライバシーポリシーは [app/privacy/page.tsx](../app/privacy/page.tsx) にあります。
 
 ## 技術構成
@@ -108,9 +110,12 @@ PDFの読み込み、プレビュー、分割PDFの作成はブラウザ内で�
 
 `next.config.ts` では `output: "export"` と `images.unoptimized: true` を設定しています。
 
+Google Analytics は `app/layout.tsx` で `next/script` を使って読み込みます。トラッキングIDは `NEXT_PUBLIC_GA_ID` から参照します。
+
 ## 実装上の注意
 
 - PDFの分割ロジックを変えた場合は、この仕様書も更新する
 - UIの文言や操作フローを変えた場合は、READMEと仕様書の両方を確認する
 - PDF処理をサーバーへ移す変更を入れる場合は、README、仕様書、プライバシーポリシーの更新が必要
+- アクセス解析や外部サービス連携を変更する場合は、README、仕様書、プライバシーポリシーの更新が必要
 - ページ回転や座標変換を変更する場合は、左右分割、上下分割、逆順出力をまとめて確認する
