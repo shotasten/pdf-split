@@ -260,8 +260,10 @@ a {
 .batch-file-list {
   display: grid;
   gap: 8px;
-  padding: 14px 24px;
-  border-bottom: 1px solid var(--line);
+  padding: 14px;
+  margin: 16px 24px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   background: var(--chrome-soft);
 }
 
@@ -1067,6 +1069,7 @@ canvas {
   }
 
   .file-picker,
+  .batch-file-list,
   .primary-button,
   .download-link {
     margin-right: 16px;
