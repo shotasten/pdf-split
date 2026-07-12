@@ -275,11 +275,44 @@ a {
   font-weight: 800;
 }
 
+.batch-file-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.batch-file-list-actions button {
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-hover);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.batch-file-list-actions button:hover:not(:disabled) {
+  color: #315e6e;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.batch-file-list-actions button:disabled {
+  color: #a6b6bb;
+  cursor: wait;
+}
+
 .batch-file-list-items {
   display: grid;
   max-height: 190px;
   gap: 5px;
   overflow-y: auto;
+}
+
+.batch-file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 5px;
 }
 
 .batch-file-item {
@@ -311,6 +344,38 @@ a {
 }
 
 .batch-file-item:disabled {
+  cursor: wait;
+}
+
+.batch-file-remove {
+  display: grid;
+  width: 34px;
+  min-height: 42px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.batch-file-remove:hover:not(:disabled) {
+  border-color: #e2aaa3;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.batch-file-remove:focus-visible {
+  outline: 3px solid rgba(154, 59, 47, 0.18);
+  outline-offset: 2px;
+}
+
+.batch-file-remove:disabled {
+  color: #a6b6bb;
   cursor: wait;
 }
 

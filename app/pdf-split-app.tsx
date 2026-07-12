@@ -480,6 +480,27 @@ export default function PdfSplitApp() {
     closeCharacterMenu();
   }
 
+  async function removePdfFile(fileToRemove: File) {
+    if (isProcessing) {
+      return;
+    }
+
+    const remainingFiles = files.filter((candidate) => candidate !== fileToRemove);
+    const isRemovingSelectedFile = fileToRemove === file;
+
+    setFiles(remainingFiles);
+    setBatchResults((current) => current.filter((_, index) => files[index] !== fileToRemove));
+
+    if (remainingFiles.length === 0) {
+      resetLoadedPdf();
+      return;
+    }
+
+    if (isRemovingSelectedFile) {
+      await loadPdfFile(remainingFiles[0]);
+    }
+  }
+
   return (
     <SiteFrame>
       <section id="tool" className="workspace" aria-label="PDF見開き分割くん">
@@ -500,7 +521,12 @@ export default function PdfSplitApp() {
             <div className="batch-file-list" aria-label="読み込んだPDFの一覧">
               <div className="batch-file-list-header">
                 <span className="field-label">処理するPDF</span>
-                <span>{files.length}件</span>
+                <div className="batch-file-list-actions">
+                  <span>{files.length}件</span>
+                  <button type="button" onClick={resetLoadedPdf} disabled={isProcessing}>
+                    すべてクリア
+                  </button>
+                </div>
               </div>
               <div className="batch-file-list-items">
                 {files.map((batchFile, index) => {
@@ -508,18 +534,29 @@ export default function PdfSplitApp() {
                   const isSelected = batchFile === file;
 
                   return (
-                    <button
-                      className={`batch-file-item${isSelected ? " is-selected" : ""}`}
-                      key={`${batchFile.name}-${batchFile.lastModified}-${index}`}
-                      type="button"
-                      onClick={() => loadPdfFile(batchFile)}
-                      disabled={isProcessing}
-                    >
-                      <span className="batch-file-name">{batchFile.name}</span>
-                      <span className={`batch-file-status is-${result?.status ?? "waiting"}`}>
-                        {result?.message ?? "待機中"}
-                      </span>
-                    </button>
+                    <div className="batch-file-row" key={`${batchFile.name}-${batchFile.lastModified}-${index}`}>
+                      <button
+                        className={`batch-file-item${isSelected ? " is-selected" : ""}`}
+                        type="button"
+                        onClick={() => loadPdfFile(batchFile)}
+                        disabled={isProcessing}
+                      >
+                        <span className="batch-file-name">{batchFile.name}</span>
+                        <span className={`batch-file-status is-${result?.status ?? "waiting"}`}>
+                          {result?.message ?? "待機中"}
+                        </span>
+                      </button>
+                      <button
+                        className="batch-file-remove"
+                        type="button"
+                        onClick={() => removePdfFile(batchFile)}
+                        disabled={isProcessing}
+                        aria-label={`${batchFile.name}を削除`}
+                        title="このファイルを削除"
+                      >
+                        ×
+                      </button>
+                    </div>
                   );
                 })}
               </div>
