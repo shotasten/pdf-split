@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import SiteFrame from "./site-frame";
-import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
-import { PDFDocument } from "pdf-lib";
+import { ChangeEvent, DragEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { EncryptedPDFError, PDFDocument } from "pdf-lib";
 import type { PDFPageProxy } from "pdfjs-dist";
 
 type SplitDirection = "vertical" | "horizontal";
@@ -85,6 +85,16 @@ async function drawPage(canvas: HTMLCanvasElement | null, page: PDFPageProxy) {
   }).promise;
 }
 
+async function loadPreviewDocument(bytes: ArrayBuffer, password: string) {
+  const pdfjs = await import("pdfjs-dist");
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.mjs",
+    import.meta.url
+  ).toString();
+
+  return pdfjs.getDocument({ data: bytes.slice(0), password: password || undefined }).promise;
+}
+
 function getPageSize(page: PDFPageProxy): PdfPage {
   const viewport = page.getViewport({ scale: 1 });
   return {
@@ -110,6 +120,9 @@ export default function PdfSplitApp() {
   const [error, setError] = useState<string | null>(null);
   const [isCharacterMenuOpen, setIsCharacterMenuOpen] = useState(false);
   const [isClearConfirming, setIsClearConfirming] = useState(false);
+  const [password, setPassword] = useState("");
+  const [isPasswordRequired, setIsPasswordRequired] = useState(false);
+  const [submittedPassword, setSubmittedPassword] = useState("");
 
   const pageLabel = useMemo(() => {
     if (!previewPage || pageCount === 0) {
@@ -154,14 +167,7 @@ export default function PdfSplitApp() {
       setError(null);
 
       try {
-        const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-          "pdfjs-dist/build/pdf.worker.mjs",
-          import.meta.url
-        ).toString();
-
-        const documentTask = pdfjs.getDocument({ data: bytes.slice(0) });
-        const pdf = await documentTask.promise;
+        const pdf = await loadPreviewDocument(bytes, submittedPassword);
 
         if (cancelled) {
           return;
@@ -169,9 +175,16 @@ export default function PdfSplitApp() {
 
         setPageCount(pdf.numPages);
         setPreviewPageNumber(1);
+        setIsPasswordRequired(false);
       } catch (previewError) {
         console.error(previewError);
-        setError("PDFのプレビュー生成に失敗しました。別のPDFで試してください。");
+        if (isPasswordError(previewError)) {
+          setIsPasswordRequired(true);
+          setError(submittedPassword ? "パスワードが違います。もう一度入力してください。" : null);
+        } else {
+          setIsPasswordRequired(false);
+          setError("PDFのプレビュー生成に失敗しました。別のPDFで試してください。");
+        }
         setPageCount(0);
         setPreviewPage(null);
         clearCanvas(canvasRef.current);
@@ -187,7 +200,7 @@ export default function PdfSplitApp() {
     return () => {
       cancelled = true;
     };
-  }, [pdfBytes]);
+  }, [pdfBytes, submittedPassword]);
 
   useEffect(() => {
     if (!pdfBytes || previewPageNumber < 1) {
@@ -202,14 +215,7 @@ export default function PdfSplitApp() {
       setError(null);
 
       try {
-        const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-          "pdfjs-dist/build/pdf.worker.mjs",
-          import.meta.url
-        ).toString();
-
-        const documentTask = pdfjs.getDocument({ data: bytes.slice(0) });
-        const pdf = await documentTask.promise;
+        const pdf = await loadPreviewDocument(bytes, submittedPassword);
         const page = await pdf.getPage(previewPageNumber);
 
         if (cancelled) {
@@ -220,7 +226,12 @@ export default function PdfSplitApp() {
         await drawPage(canvasRef.current, page);
       } catch (previewError) {
         console.error(previewError);
-        setError("PDFのプレビュー生成に失敗しました。別のPDFで試してください。");
+        if (isPasswordError(previewError)) {
+          setIsPasswordRequired(true);
+          setError(submittedPassword ? "パスワードが違います。もう一度入力してください。" : null);
+        } else {
+          setError("PDFのプレビュー生成に失敗しました。別のPDFで試してください。");
+        }
         setPreviewPage(null);
         clearCanvas(canvasRef.current);
       } finally {
@@ -235,7 +246,7 @@ export default function PdfSplitApp() {
     return () => {
       cancelled = true;
     };
-  }, [pdfBytes, previewPageNumber]);
+  }, [pdfBytes, previewPageNumber, submittedPassword]);
 
 
   async function loadPdfFile(selectedFile: File | null) {
@@ -244,6 +255,9 @@ export default function PdfSplitApp() {
     setPreviewPageNumber(1);
     setPageCount(0);
     setError(null);
+    setPassword("");
+    setIsPasswordRequired(false);
+    setSubmittedPassword("");
     closeCharacterMenu();
     setDownloadUrl((currentUrl) => {
       if (currentUrl) {
@@ -307,6 +321,16 @@ export default function PdfSplitApp() {
     setPreviewPageNumber((currentPage) => Math.min(pageCount, currentPage + 1));
   }
 
+  function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!password) {
+      return;
+    }
+
+    setError(null);
+    setSubmittedPassword(password);
+  }
+
   async function handleDownload() {
     if (!pdfBytes || !file) {
       setError("分割するPDFを選択してください。");
@@ -317,30 +341,17 @@ export default function PdfSplitApp() {
     setError(null);
 
     try {
-      const sourcePdf = await PDFDocument.load(pdfBytes.slice(0));
-      const outputPdf = await PDFDocument.create();
-      const sourcePageCount = sourcePdf.getPageCount();
+      let outputBytes: Uint8Array;
 
-      for (let pageIndex = 0; pageIndex < sourcePageCount; pageIndex += 1) {
-        const sourcePage = sourcePdf.getPage(pageIndex);
-        const cropBox = sourcePage.getCropBox();
-        const rotation = normalizeRotation(sourcePage.getRotation().angle);
-        const visualSize = getVisualSize(cropBox, rotation);
-        const parts = getSplitParts(visualSize.width, visualSize.height, direction, splitRatio, outputOrder);
-
-        for (const part of parts) {
-          const [newPage] = await outputPdf.copyPages(sourcePdf, [pageIndex]);
-          const box = mapVisualRectToPageBox(part, cropBox, rotation);
-          newPage.setMediaBox(box.x, box.y, box.width, box.height);
-          newPage.setCropBox(box.x, box.y, box.width, box.height);
-          newPage.setBleedBox(box.x, box.y, box.width, box.height);
-          newPage.setTrimBox(box.x, box.y, box.width, box.height);
-          newPage.setArtBox(box.x, box.y, box.width, box.height);
-          outputPdf.addPage(newPage);
+      try {
+        outputBytes = await splitPdfWithPageBoxes(pdfBytes, direction, splitRatio, outputOrder);
+      } catch (splitError) {
+        if (!(splitError instanceof EncryptedPDFError)) {
+          throw splitError;
         }
-      }
 
-      const outputBytes = await outputPdf.save();
+        outputBytes = await splitEncryptedPdfAsImages(pdfBytes, submittedPassword, direction, splitRatio, outputOrder);
+      }
       const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: "application/pdf" });
       const nextUrl = URL.createObjectURL(blob);
 
@@ -352,7 +363,7 @@ export default function PdfSplitApp() {
       });
     } catch (processingError) {
       console.error(processingError);
-      setError("PDFの分割に失敗しました。パスワード付きPDFや破損したPDFは処理できない場合があります。");
+      setError("PDFの分割に失敗しました。パスワードが正しいか、PDFが破損していないか確認してください。");
     } finally {
       setIsProcessing(false);
     }
@@ -385,6 +396,9 @@ export default function PdfSplitApp() {
     setPreviewPage(null);
     setDownloadUrl(null);
     setError(null);
+    setPassword("");
+    setIsPasswordRequired(false);
+    setSubmittedPassword("");
     setIsProcessing(false);
     clearCanvas(canvasRef.current);
     closeCharacterMenu();
@@ -405,6 +419,24 @@ export default function PdfSplitApp() {
             <span>{isDragging ? "ここにPDFをドロップ" : "PDFを選択 / ドロップ"}</span>
             <strong>{file ? file.name : "未選択"}</strong>
           </label>
+
+          {isPasswordRequired ? (
+            <form className="password-form" onSubmit={handlePasswordSubmit}>
+              <label className="field-label" htmlFor="pdf-password">PDFのパスワード</label>
+              <div className="password-input-row">
+                <input
+                  id="pdf-password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="current-password"
+                  autoFocus
+                />
+                <button type="submit" disabled={!password || isRendering}>開く</button>
+              </div>
+              <p>パスワードはこのブラウザ内だけで使用し、保存・送信しません。</p>
+            </form>
+          ) : null}
 
           <div className="field-group">
             <span className="field-label">分割方向</span>
@@ -464,7 +496,7 @@ export default function PdfSplitApp() {
             </div>
           </div>
 
-          <button className="primary-button" type="button" onClick={handleDownload} disabled={!pdfBytes || isProcessing}>
+          <button className="primary-button" type="button" onClick={handleDownload} disabled={!pdfBytes || isPasswordRequired || isProcessing}>
             {isProcessing ? "分割中..." : "分割PDFを作成"}
           </button>
 
@@ -534,7 +566,7 @@ export default function PdfSplitApp() {
                 読み込み中
               </div>
             ) : null}
-            {pdfBytes ? (
+            {pdfBytes && !isPasswordRequired ? (
               <div className="canvas-frame">
                 <canvas ref={canvasRef} aria-label="PDFプレビュー" />
                 {previewPage ? <div className={`split-marker ${direction}`} style={markerStyle} aria-hidden="true" /> : null}
@@ -587,6 +619,104 @@ function getSplitParts(
         ];
 
   return outputOrder === "natural" ? parts : parts.reverse();
+}
+
+async function splitPdfWithPageBoxes(
+  bytes: ArrayBuffer,
+  direction: SplitDirection,
+  splitRatio: number,
+  outputOrder: OutputOrder
+) {
+  const sourcePdf = await PDFDocument.load(bytes.slice(0));
+  const outputPdf = await PDFDocument.create();
+
+  for (let pageIndex = 0; pageIndex < sourcePdf.getPageCount(); pageIndex += 1) {
+    const sourcePage = sourcePdf.getPage(pageIndex);
+    const cropBox = sourcePage.getCropBox();
+    const rotation = normalizeRotation(sourcePage.getRotation().angle);
+    const visualSize = getVisualSize(cropBox, rotation);
+    const parts = getSplitParts(visualSize.width, visualSize.height, direction, splitRatio, outputOrder);
+
+    for (const part of parts) {
+      const [newPage] = await outputPdf.copyPages(sourcePdf, [pageIndex]);
+      const box = mapVisualRectToPageBox(part, cropBox, rotation);
+      newPage.setMediaBox(box.x, box.y, box.width, box.height);
+      newPage.setCropBox(box.x, box.y, box.width, box.height);
+      newPage.setBleedBox(box.x, box.y, box.width, box.height);
+      newPage.setTrimBox(box.x, box.y, box.width, box.height);
+      newPage.setArtBox(box.x, box.y, box.width, box.height);
+      outputPdf.addPage(newPage);
+    }
+  }
+
+  return outputPdf.save();
+}
+
+async function splitEncryptedPdfAsImages(
+  bytes: ArrayBuffer,
+  password: string,
+  direction: SplitDirection,
+  splitRatio: number,
+  outputOrder: OutputOrder
+) {
+  const sourcePdf = await loadPreviewDocument(bytes, password);
+  const outputPdf = await PDFDocument.create();
+  const renderScale = 2;
+
+  for (let pageIndex = 1; pageIndex <= sourcePdf.numPages; pageIndex += 1) {
+    const sourcePage = await sourcePdf.getPage(pageIndex);
+    const pageViewport = sourcePage.getViewport({ scale: renderScale });
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error("Canvas context is unavailable.");
+    }
+
+    canvas.width = Math.ceil(pageViewport.width);
+    canvas.height = Math.ceil(pageViewport.height);
+    await sourcePage.render({ canvasContext: context, viewport: pageViewport }).promise;
+
+    const parts = getSplitParts(
+      pageViewport.width / renderScale,
+      pageViewport.height / renderScale,
+      direction,
+      splitRatio,
+      outputOrder
+    );
+
+    for (const part of parts) {
+      const partCanvas = document.createElement("canvas");
+      partCanvas.width = Math.round(part.width * renderScale);
+      partCanvas.height = Math.round(part.height * renderScale);
+      const partContext = partCanvas.getContext("2d");
+
+      if (!partContext) {
+        throw new Error("Canvas context is unavailable.");
+      }
+
+      partContext.drawImage(
+        canvas,
+        Math.round(part.x * renderScale),
+        Math.round(canvas.height - (part.y + part.height) * renderScale),
+        partCanvas.width,
+        partCanvas.height,
+        0,
+        0,
+        partCanvas.width,
+        partCanvas.height
+      );
+      const image = await outputPdf.embedPng(partCanvas.toDataURL("image/png"));
+      const newPage = outputPdf.addPage([part.width, part.height]);
+      newPage.drawImage(image, { x: 0, y: 0, width: part.width, height: part.height });
+    }
+  }
+
+  return outputPdf.save();
+}
+
+function isPasswordError(error: unknown) {
+  return typeof error === "object" && error !== null && "name" in error && error.name === "PasswordException";
 }
 
 function formatPercent(value: number) {
