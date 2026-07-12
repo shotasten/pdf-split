@@ -5,6 +5,7 @@ import SiteFrame from "./site-frame";
 import { ChangeEvent, DragEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { EncryptedPDFError, PDFDocument } from "pdf-lib";
 import type { PDFPageProxy } from "pdfjs-dist";
+import JSZip from "jszip";
 
 type SplitDirection = "vertical" | "horizontal";
 type OutputOrder = "natural" | "reverse";
@@ -19,6 +20,12 @@ type Rect = {
   y: number;
   width: number;
   height: number;
+};
+
+type BatchItemResult = {
+  name: string;
+  status: "waiting" | "processing" | "complete" | "error";
+  message?: string;
 };
 
 const splitDirectionLabels: Record<SplitDirection, string> = {
@@ -106,6 +113,8 @@ function getPageSize(page: PDFPageProxy): PdfPage {
 export default function PdfSplitApp() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [batchResults, setBatchResults] = useState<BatchItemResult[]>([]);
   const [pdfBytes, setPdfBytes] = useState<ArrayBuffer | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [previewPageNumber, setPreviewPageNumber] = useState(1);
@@ -123,6 +132,7 @@ export default function PdfSplitApp() {
   const [password, setPassword] = useState("");
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
   const [submittedPassword, setSubmittedPassword] = useState("");
+  const [passwordsByFile, setPasswordsByFile] = useState<Record<string, string>>({});
 
   const pageLabel = useMemo(() => {
     if (!previewPage || pageCount === 0) {
@@ -255,9 +265,10 @@ export default function PdfSplitApp() {
     setPreviewPageNumber(1);
     setPageCount(0);
     setError(null);
+    const savedPassword = selectedFile ? passwordsByFile[getFileKey(selectedFile)] ?? "" : "";
     setPassword("");
     setIsPasswordRequired(false);
-    setSubmittedPassword("");
+    setSubmittedPassword(savedPassword);
     closeCharacterMenu();
     setDownloadUrl((currentUrl) => {
       if (currentUrl) {
@@ -280,8 +291,31 @@ export default function PdfSplitApp() {
     setPdfBytes(await selectedFile.arrayBuffer());
   }
 
+  async function loadPdfFiles(selectedFiles: FileList | File[]) {
+    const nextFiles = Array.from(selectedFiles);
+
+    if (nextFiles.length === 0) {
+      return;
+    }
+
+    const invalidFile = nextFiles.find(
+      (candidate) => candidate.type !== "application/pdf" && !candidate.name.toLowerCase().endsWith(".pdf")
+    );
+
+    if (invalidFile) {
+      setError("PDFファイルのみ選択してください。");
+      return;
+    }
+
+    setFiles(nextFiles);
+    setBatchResults(nextFiles.map(({ name }) => ({ name, status: "waiting" })));
+    await loadPdfFile(nextFiles[0]);
+  }
+
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    await loadPdfFile(event.target.files?.[0] ?? null);
+    if (event.target.files) {
+      await loadPdfFiles(event.target.files);
+    }
     event.target.value = "";
   }
 
@@ -311,7 +345,7 @@ export default function PdfSplitApp() {
     event.preventDefault();
     event.stopPropagation();
     setIsDragging(false);
-    await loadPdfFile(event.dataTransfer.files?.[0] ?? null);
+    await loadPdfFiles(event.dataTransfer.files);
   }
   function goToPreviousPage() {
     setPreviewPageNumber((currentPage) => Math.max(1, currentPage - 1));
@@ -329,10 +363,25 @@ export default function PdfSplitApp() {
 
     setError(null);
     setSubmittedPassword(password);
+    if (file) {
+      setPasswordsByFile((current) => ({ ...current, [getFileKey(file)]: password }));
+    }
+  }
+
+  async function createSplitPdf(bytes: ArrayBuffer, currentPassword = "") {
+    try {
+      return await splitPdfWithPageBoxes(bytes, direction, splitRatio, outputOrder);
+    } catch (splitError) {
+      if (!(splitError instanceof EncryptedPDFError)) {
+        throw splitError;
+      }
+
+      return splitEncryptedPdfAsImages(bytes, currentPassword, direction, splitRatio, outputOrder);
+    }
   }
 
   async function handleDownload() {
-    if (!pdfBytes || !file) {
+    if (files.length === 0) {
       setError("分割するPDFを選択してください。");
       return;
     }
@@ -341,18 +390,42 @@ export default function PdfSplitApp() {
     setError(null);
 
     try {
-      let outputBytes: Uint8Array;
+      const zip = new JSZip();
+      let successCount = 0;
 
-      try {
-        outputBytes = await splitPdfWithPageBoxes(pdfBytes, direction, splitRatio, outputOrder);
-      } catch (splitError) {
-        if (!(splitError instanceof EncryptedPDFError)) {
-          throw splitError;
+      for (let index = 0; index < files.length; index += 1) {
+        const processingFile = files[index];
+        setBatchResults((current) => current.map((item, itemIndex) => (
+          itemIndex === index ? { ...item, status: "processing", message: "分割中" } : item
+        )));
+
+        try {
+          const bytes = processingFile === file && pdfBytes ? pdfBytes : await processingFile.arrayBuffer();
+          const currentPassword = passwordsByFile[getFileKey(processingFile)] ?? "";
+          const outputBytes = await createSplitPdf(bytes, currentPassword);
+          zip.file(buildOutputFileName(processingFile.name), outputBytes);
+          successCount += 1;
+          setBatchResults((current) => current.map((item, itemIndex) => (
+            itemIndex === index ? { ...item, status: "complete", message: "完了" } : item
+          )));
+        } catch (processingError) {
+          console.error(processingError);
+          const message = isPasswordError(processingError)
+            ? "パスワードが必要です。対象ファイルを選んでから開いてください。"
+            : "分割に失敗しました";
+          setBatchResults((current) => current.map((item, itemIndex) => (
+            itemIndex === index ? { ...item, status: "error", message } : item
+          )));
         }
-
-        outputBytes = await splitEncryptedPdfAsImages(pdfBytes, submittedPassword, direction, splitRatio, outputOrder);
       }
-      const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: "application/pdf" });
+
+      if (successCount === 0) {
+        setError("分割できるPDFがありませんでした。エラー内容を確認してください。");
+        return;
+      }
+
+      const archive = await zip.generateAsync({ type: "blob" });
+      const blob = archive;
       const nextUrl = URL.createObjectURL(blob);
 
       setDownloadUrl((currentUrl) => {
@@ -363,7 +436,7 @@ export default function PdfSplitApp() {
       });
     } catch (processingError) {
       console.error(processingError);
-      setError("PDFの分割に失敗しました。パスワードが正しいか、PDFが破損していないか確認してください。");
+      setError("ZIPファイルの作成に失敗しました。もう一度試してください。");
     } finally {
       setIsProcessing(false);
     }
@@ -390,6 +463,8 @@ export default function PdfSplitApp() {
     }
 
     setFile(null);
+    setFiles([]);
+    setBatchResults([]);
     setPdfBytes(null);
     setPageCount(0);
     setPreviewPageNumber(1);
@@ -399,9 +474,31 @@ export default function PdfSplitApp() {
     setPassword("");
     setIsPasswordRequired(false);
     setSubmittedPassword("");
+    setPasswordsByFile({});
     setIsProcessing(false);
     clearCanvas(canvasRef.current);
     closeCharacterMenu();
+  }
+
+  async function removePdfFile(fileToRemove: File) {
+    if (isProcessing) {
+      return;
+    }
+
+    const remainingFiles = files.filter((candidate) => candidate !== fileToRemove);
+    const isRemovingSelectedFile = fileToRemove === file;
+
+    setFiles(remainingFiles);
+    setBatchResults((current) => current.filter((_, index) => files[index] !== fileToRemove));
+
+    if (remainingFiles.length === 0) {
+      resetLoadedPdf();
+      return;
+    }
+
+    if (isRemovingSelectedFile) {
+      await loadPdfFile(remainingFiles[0]);
+    }
   }
 
   return (
@@ -415,10 +512,56 @@ export default function PdfSplitApp() {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <input type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
-            <span>{isDragging ? "ここにPDFをドロップ" : "PDFを選択 / ドロップ"}</span>
-            <strong>{file ? file.name : "未選択"}</strong>
+            <input type="file" accept="application/pdf,.pdf" multiple onChange={handleFileChange} />
+            <span>{isDragging ? "ここにPDFをドロップ" : "PDFを複数選択 / ドロップ"}</span>
+            <strong>{files.length > 0 ? `${files.length}件を読み込みました` : "未選択"}</strong>
           </label>
+
+          {files.length > 0 ? (
+            <div className="batch-file-list" aria-label="読み込んだPDFの一覧">
+              <div className="batch-file-list-header">
+                <span className="field-label">処理するPDF</span>
+                <div className="batch-file-list-actions">
+                  <span>{files.length}件</span>
+                  <button type="button" onClick={resetLoadedPdf} disabled={isProcessing}>
+                    すべてクリア
+                  </button>
+                </div>
+              </div>
+              <div className="batch-file-list-items">
+                {files.map((batchFile, index) => {
+                  const result = batchResults[index];
+                  const isSelected = batchFile === file;
+
+                  return (
+                    <div className="batch-file-row" key={`${batchFile.name}-${batchFile.lastModified}-${index}`}>
+                      <button
+                        className={`batch-file-item${isSelected ? " is-selected" : ""}`}
+                        type="button"
+                        onClick={() => loadPdfFile(batchFile)}
+                        disabled={isProcessing}
+                      >
+                        <span className="batch-file-name">{batchFile.name}</span>
+                        <span className={`batch-file-status is-${result?.status ?? "waiting"}`}>
+                          {result?.message ?? "待機中"}
+                        </span>
+                      </button>
+                      <button
+                        className="batch-file-remove"
+                        type="button"
+                        onClick={() => removePdfFile(batchFile)}
+                        disabled={isProcessing}
+                        aria-label={`${batchFile.name}を削除`}
+                        title="このファイルを削除"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
 
           {isPasswordRequired ? (
             <form className="password-form" onSubmit={handlePasswordSubmit}>
@@ -496,13 +639,13 @@ export default function PdfSplitApp() {
             </div>
           </div>
 
-          <button className="primary-button" type="button" onClick={handleDownload} disabled={!pdfBytes || isPasswordRequired || isProcessing}>
-            {isProcessing ? "分割中..." : "分割PDFを作成"}
+          <button className="primary-button" type="button" onClick={handleDownload} disabled={files.length === 0 || isPasswordRequired || isProcessing}>
+            {isProcessing ? "まとめて分割中..." : "まとめて分割してZIPを作成"}
           </button>
 
           {downloadUrl ? (
-            <a className="download-link" href={downloadUrl} download={buildOutputFileName(file?.name)}>
-              分割後PDFをダウンロード
+            <a className="download-link" href={downloadUrl} download="split-pdfs.zip">
+              分割後PDFをZIPでダウンロード
             </a>
           ) : null}
 
@@ -579,9 +722,9 @@ export default function PdfSplitApp() {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
-                <input type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
-                <span>{isDragging ? "ここにPDFをドロップ" : "PDFを選択 / ドロップ"}</span>
-                <strong>見開きPDFをアップロードすると、ここにプレビューが表示されます</strong>
+                <input type="file" accept="application/pdf,.pdf" multiple onChange={handleFileChange} />
+                <span>{isDragging ? "ここにPDFをドロップ" : "PDFを複数選択 / ドロップ"}</span>
+                <strong>見開きPDFをアップロードすると、選択中のファイルをここにプレビュー表示します</strong>
               </label>
             )}
           </div>
@@ -721,6 +864,10 @@ function isPasswordError(error: unknown) {
 
 function formatPercent(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function getFileKey(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
 function snapToCenter(value: number) {
