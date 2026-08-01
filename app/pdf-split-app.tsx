@@ -126,6 +126,8 @@ export default function PdfSplitApp() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [downloadFileName, setDownloadFileName] = useState("split-pdfs.zip");
+  const [isDirectPdfDownload, setIsDirectPdfDownload] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCharacterMenuOpen, setIsCharacterMenuOpen] = useState(false);
   const [isClearConfirming, setIsClearConfirming] = useState(false);
@@ -390,7 +392,8 @@ export default function PdfSplitApp() {
     setError(null);
 
     try {
-      const zip = new JSZip();
+      const zip = files.length > 1 ? new JSZip() : null;
+      let singlePdf: Uint8Array | null = null;
       let successCount = 0;
 
       for (let index = 0; index < files.length; index += 1) {
@@ -403,7 +406,11 @@ export default function PdfSplitApp() {
           const bytes = processingFile === file && pdfBytes ? pdfBytes : await processingFile.arrayBuffer();
           const currentPassword = passwordsByFile[getFileKey(processingFile)] ?? "";
           const outputBytes = await createSplitPdf(bytes, currentPassword);
-          zip.file(buildOutputFileName(processingFile.name), outputBytes);
+          if (zip) {
+            zip.file(buildOutputFileName(processingFile.name), outputBytes);
+          } else {
+            singlePdf = outputBytes;
+          }
           successCount += 1;
           setBatchResults((current) => current.map((item, itemIndex) => (
             itemIndex === index ? { ...item, status: "complete", message: "完了" } : item
@@ -424,8 +431,15 @@ export default function PdfSplitApp() {
         return;
       }
 
-      const archive = await zip.generateAsync({ type: "blob" });
-      const blob = archive;
+      let blob: Blob;
+      if (zip) {
+        blob = await zip.generateAsync({ type: "blob" });
+      } else {
+        if (!singlePdf) {
+          throw new Error("分割後PDFを作成できませんでした。");
+        }
+        blob = new Blob([singlePdf], { type: "application/pdf" });
+      }
       const nextUrl = URL.createObjectURL(blob);
 
       setDownloadUrl((currentUrl) => {
@@ -434,9 +448,11 @@ export default function PdfSplitApp() {
         }
         return nextUrl;
       });
+      setDownloadFileName(files.length === 1 ? buildOutputFileName(files[0].name) : "split-pdfs.zip");
+      setIsDirectPdfDownload(files.length === 1);
     } catch (processingError) {
       console.error(processingError);
-      setError("ZIPファイルの作成に失敗しました。もう一度試してください。");
+      setError("分割後PDFの作成に失敗しました。もう一度試してください。");
     } finally {
       setIsProcessing(false);
     }
@@ -470,6 +486,8 @@ export default function PdfSplitApp() {
     setPreviewPageNumber(1);
     setPreviewPage(null);
     setDownloadUrl(null);
+    setDownloadFileName("split-pdfs.zip");
+    setIsDirectPdfDownload(false);
     setError(null);
     setPassword("");
     setIsPasswordRequired(false);
@@ -640,12 +658,12 @@ export default function PdfSplitApp() {
           </div>
 
           <button className="primary-button" type="button" onClick={handleDownload} disabled={files.length === 0 || isPasswordRequired || isProcessing}>
-            {isProcessing ? "まとめて分割中..." : "まとめて分割してZIPを作成"}
+            {isProcessing ? "分割中..." : files.length === 1 ? "分割してPDFを作成" : "まとめて分割してZIPを作成"}
           </button>
 
           {downloadUrl ? (
-            <a className="download-link" href={downloadUrl} download="split-pdfs.zip">
-              分割後PDFをZIPでダウンロード
+            <a className="download-link" href={downloadUrl} download={downloadFileName}>
+              {isDirectPdfDownload ? "分割後PDFをダウンロード" : "分割後PDFをZIPでダウンロード"}
             </a>
           ) : null}
 
