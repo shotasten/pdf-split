@@ -658,7 +658,7 @@ export default function PdfSplitApp() {
           </div>
 
           <button className="primary-button" type="button" onClick={handleDownload} disabled={files.length === 0 || isPasswordRequired || isProcessing}>
-            {isProcessing ? "分割中..." : files.length === 1 ? "分割してPDFを作成" : "まとめて分割してZIPを作成"}
+            {isProcessing ? "分割中..." : files.length > 1 ? "まとめて分割してZIPを作成" : "分割してPDFを作成"}
           </button>
 
           {downloadUrl ? (
