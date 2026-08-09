@@ -21,7 +21,15 @@
 ## セットアップ
 
 ```bash
-npm install
+npm ci
+```
+
+`npm ci` は `package-lock.json` と `package.json` の一致を検証し、lockfileに記録された内容だけをインストールします。
+依存関係を更新するときは、意図した変更を確認してから `npm install --save-exact <パッケージ名>` を実行し、lockfileとともにコミットしてください。
+高危険度以上の既知の脆弱性は次で確認できます。
+
+```bash
+npm run audit
 ```
 
 ## 環境変数
