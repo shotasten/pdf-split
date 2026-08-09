@@ -87,6 +87,7 @@ async function drawPage(canvas: HTMLCanvasElement | null, page: PDFPageProxy) {
   context.fillRect(0, 0, scaledViewport.width, scaledViewport.height);
 
   await page.render({
+    canvas,
     canvasContext: context,
     viewport: scaledViewport
   }).promise;
@@ -438,7 +439,11 @@ export default function PdfSplitApp() {
         if (!singlePdf) {
           throw new Error("分割後PDFを作成できませんでした。");
         }
-        blob = new Blob([singlePdf], { type: "application/pdf" });
+        const pdfBuffer = singlePdf.buffer.slice(
+          singlePdf.byteOffset,
+          singlePdf.byteOffset + singlePdf.byteLength
+        ) as ArrayBuffer;
+        blob = new Blob([pdfBuffer], { type: "application/pdf" });
       }
       const nextUrl = URL.createObjectURL(blob);
 
@@ -836,7 +841,11 @@ async function splitEncryptedPdfAsImages(
 
     canvas.width = Math.ceil(pageViewport.width);
     canvas.height = Math.ceil(pageViewport.height);
-    await sourcePage.render({ canvasContext: context, viewport: pageViewport }).promise;
+    await sourcePage.render({
+      canvas,
+      canvasContext: context,
+      viewport: pageViewport
+    }).promise;
 
     const parts = getSplitParts(
       pageViewport.width / renderScale,
