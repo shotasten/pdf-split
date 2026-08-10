@@ -6,6 +6,7 @@ import { ChangeEvent, DragEvent, FormEvent, useEffect, useMemo, useRef, useState
 import { EncryptedPDFError, PDFDocument } from "pdf-lib";
 import type { PDFPageProxy } from "pdfjs-dist";
 import JSZip from "jszip";
+import { splitPdfWithPageBoxes as splitPdfWithPageBoxesCore } from "../lib/pdf-split";
 
 type SplitDirection = "vertical" | "horizontal";
 type OutputOrder = "natural" | "reverse";
@@ -373,7 +374,7 @@ export default function PdfSplitApp() {
 
   async function createSplitPdf(bytes: ArrayBuffer, currentPassword = "") {
     try {
-      return await splitPdfWithPageBoxes(bytes, direction, splitRatio, outputOrder);
+      return await splitPdfWithPageBoxesCore(bytes, direction, splitRatio, outputOrder);
     } catch (splitError) {
       if (!(splitError instanceof EncryptedPDFError)) {
         throw splitError;
@@ -785,37 +786,6 @@ function getSplitParts(
         ];
 
   return outputOrder === "natural" ? parts : parts.reverse();
-}
-
-async function splitPdfWithPageBoxes(
-  bytes: ArrayBuffer,
-  direction: SplitDirection,
-  splitRatio: number,
-  outputOrder: OutputOrder
-) {
-  const sourcePdf = await PDFDocument.load(bytes.slice(0));
-  const outputPdf = await PDFDocument.create();
-
-  for (let pageIndex = 0; pageIndex < sourcePdf.getPageCount(); pageIndex += 1) {
-    const sourcePage = sourcePdf.getPage(pageIndex);
-    const cropBox = sourcePage.getCropBox();
-    const rotation = normalizeRotation(sourcePage.getRotation().angle);
-    const visualSize = getVisualSize(cropBox, rotation);
-    const parts = getSplitParts(visualSize.width, visualSize.height, direction, splitRatio, outputOrder);
-
-    for (const part of parts) {
-      const [newPage] = await outputPdf.copyPages(sourcePdf, [pageIndex]);
-      const box = mapVisualRectToPageBox(part, cropBox, rotation);
-      newPage.setMediaBox(box.x, box.y, box.width, box.height);
-      newPage.setCropBox(box.x, box.y, box.width, box.height);
-      newPage.setBleedBox(box.x, box.y, box.width, box.height);
-      newPage.setTrimBox(box.x, box.y, box.width, box.height);
-      newPage.setArtBox(box.x, box.y, box.width, box.height);
-      outputPdf.addPage(newPage);
-    }
-  }
-
-  return outputPdf.save();
 }
 
 async function splitEncryptedPdfAsImages(
