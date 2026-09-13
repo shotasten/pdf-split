@@ -23,14 +23,14 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@types/node": "26.1.2",
+    "@types/node": "26.5.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
-    "eslint": "9.39.5",
-    "eslint-config-next": "16.3.0",
-    "sharp": "0.35.3",
+    "eslint": "10.10.0",
+    "eslint-config-next": "16.3.4",
+    "sharp": "0.35.4",
     "typescript": "7.0.2",
     "typescript6": "npm:@typescript/typescript6@6.0.2",
-    "vitest": "3.2.7"
+    "vitest": "5.0.0"
   }
 }
